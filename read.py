@@ -29,7 +29,15 @@ def get_training():
 
 	print header['winner']
 
-
+#	with open('btrain2.csv','w') as csvfile:
+#		writer = csv.writer(csvfile,delimiter=',')
+#		for i in range(0,len(data)):
+#			prin = True
+#			for j in range(0,len(headers)):
+#				if(data[i][j] == '?'):
+#					prin = False
+#			if(prin):
+#				writer.writerow(data[i])
 
 
 get_training()
