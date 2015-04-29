@@ -17,8 +17,18 @@ def get_training():
 
 	data = []
 	for row in train:
+		row = [x.strip(' ') for x in row]
 		data.append(row)
-	print data
+
+	headers = data[0]
+	data.remove(data[0])
+
+	header = {}
+	for i in range(len(headers)):
+		header[headers[i]] = i
+
+	print header['winner']
+
 
 
 
