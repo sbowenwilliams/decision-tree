@@ -1,6 +1,7 @@
 import sys
 import csv
 import math
+import operator
 
 def get_training():
 
@@ -31,37 +32,36 @@ def get_training():
 	print header['winner']
 	print data[1][12]
 
-#	with open('btrain2.csv','w') as csvfile:
-#		writer = csv.writer(csvfile,delimiter=',')
-#		for i in range(0,len(data)):
-#			prin = True
-#			for j in range(0,len(headers)):
-#				if(data[i][j] == '?'):
-#					prin = False
-#			if(prin):
-#				writer.writerow(data[i])
+	return header, data
 
-def entropy(header, data, target):
-	frequency_val = {}
-	data_entropy = 0.0
-	i = 0
-	try:
-		i = header[target]
-	except ValueError:
-		pass
-
-	for row in data:
-		if frequency_val.has_key(row[i]):
-			frequency_val[row[i]] += 1
-		else:
-			frequency_val[row[i]] = 1
-	for freq in frequency_val.values():
-		data_entropy += ((-freq/len(data)) * math.log(freq/len(data), 2))
-
-	return data_entropy
+def entropy(attributes, data, targetattribute):
 
 
+    # Initialize variables
+    frequencyvalues = {}
+    dataentropy = 0.0
+    i = 0
+    try:
+        i = attributes[targetattribute]
+    except ValueError:
+        pass
+
+    # find the frequency of each entry in the dataset
+    for entry in data:
+        if frequencyvalues.has_key(entry[i]):
+            frequencyvalues[entry[i]] += 1.0
+        else:
+            frequencyvalues[entry[i]] = 1.0
+
+    # Calculate the entropy of each frequency value in dataset using
+    # the entropy formula
+    for freq in frequencyvalues.values():
+        dataentropy += ((-freq/len(data)) * math.log(freq/len(data), 2))
+
+    return dataentropy
 
 
-get_training()
+header, data = get_training()
+print entropy(header, data, 'weather')
+
 
