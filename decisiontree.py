@@ -221,7 +221,7 @@ def prune_tree(tree, nodes, validation_examples, old_accuracy):
 ############################################################################
 def main():
 	now = time.time()
-	
+
 	train_file = 'btrainsmall.csv'
 	validate_file = 'bvalidate.csv'
 	test_file = 'btest.csv'
@@ -292,9 +292,9 @@ def main():
 		nodes_pruned = pruned_learned_tree[0].list_nodes([])
 		print "Nodes:" + str(len(nodes_pruned))
 
-	# print "Tested Set:\n"
-	# tested_set = test_tree(test_data.instances, pruned_learned_tree[0])
-	# print tested_set
+	print "Tested Set:\n"
+	tested_set = test_tree(test_data.instances, pruned_learned_tree[0])
+	print tested_set
 
 	totalTime = time.time() - now
 	print "\nDonezo:"
