@@ -1,6 +1,6 @@
 class TreeNode():
 	def predict(self, e):
-		if isinstance(self, TreeLeaf):
+		if isinstance(self, Leaf):
 			return self.result
 		else:
 			if self.numeric:
@@ -17,8 +17,8 @@ class TreeNode():
 					return '0'
 				return out
 
-	def print_normal_form(self, path):
-		if isinstance(self, TreeLeaf):
+	def print_dnf(self, path):
+		if isinstance(self, Leaf):
 			if self.result == '1':
 				print "("+ str(path) + ") OR"
 				return path
@@ -32,11 +32,11 @@ class TreeNode():
 				else: 
 					list_name = self.attr_name + " is " + branch_name
 				new_path = path + [list_name]
-				branch.print_normal_form(new_path)
+				branch.print_dnf(new_path)
 		return path
 
 	def list_nodes(self, nodes):
-		if isinstance(self, TreeLeaf):
+		if isinstance(self, Leaf):
 			nodes.append(self)
 			return nodes
 		nodes.append(self)
@@ -45,19 +45,19 @@ class TreeNode():
 		return nodes
 
 
-class TreeLeaf(TreeNode):
+class Leaf(TreeNode):
 	def __init__(self, target_attribute):
 		self.result = target_attribute
 
 	def __repr__(self):
-		return "This is a TreeLeaf with result: {0}".format(self.result)
+		return "Leaf: {0}".format(self.result)
 
 	def fork(self):
-		self.__class__ = MiddleTreeNode
+		self.__class__ = MiddleNode
 		self.result = None
-		
 
-class MiddleTreeNode(TreeNode):
+
+class MiddleNode(TreeNode):
 	def __init__(self, attr_arr):
 		self.attr =  attr_arr[0]
 		self.splitval =  attr_arr[1]
@@ -67,11 +67,11 @@ class MiddleTreeNode(TreeNode):
 		self.branches = {}
 
 	def toLeaf(self, target_attribute):
-		self.__class__ = TreeLeaf
+		self.__class__ = Leaf
 		self.result = target_attribute
 
 	def add_branch(self, val, subtree, default):
 		self.branches[val] = subtree
 
 	def __repr__(self):
-		return "\nThis node is a fork on {0}, with {1} branches.\nMost instances in it are {2}.".format(self.attr_name,len(self.branches),self.mode)
+		return "\nFork on {0}, {1} branches.".format(self.attr_name,len(self.branches))

@@ -11,7 +11,7 @@ import random
 import copy
 import operator
 
-from tree import TreeNode, TreeLeaf, MiddleTreeNode
+from tree import TreeNode, Leaf, MiddleNode
 from data import Data
 
 import time
@@ -146,22 +146,22 @@ def makeDecisionTree(data, attributes, default, target_attribute, iteration, num
 	iteration += 1
 
 	if iteration > 10:
-		return TreeLeaf(default)
+		return Leaf(default)
 	if not data:
-		tree = TreeLeaf(default)
+		tree = Leaf(default)
 	elif one_class(data):
-		tree = TreeLeaf(data[0][-1])
+		tree = Leaf(data[0][-1])
 	else:
 		best_attr = selectAttr(data, attributes, target_attribute, numeric_attrs)
 		if best_attr is False:
-			tree = TreeLeaf(default)
+			tree = Leaf(default)
 
 		else:
 			split_examples = makeSplit(data, best_attr[0], best_attr[1], numeric_attrs) #new decision tree with root test *best_attr*
 			best_attr.append(split_examples['numeric'])
 			best_attr.append(attributes[best_attr[0]])
 			best_attr.append(split_examples["mode"])
-			tree = MiddleTreeNode(best_attr)
+			tree = MiddleNode(best_attr)
 			for branch_lab, branch_examples in split_examples['branches'].iteritems():
 				if not branch_examples:
 					break
@@ -195,7 +195,7 @@ def prune_tree(tree, nodes, validation_examples, old_accuracy):
 	while reduction_cap >0:
 		reduction = []
 		for n in nodes:
-			if isinstance(n, TreeLeaf):
+			if isinstance(n, Leaf):
 				nodes.pop(nodes.index(n))
 				continue
 			else:
@@ -207,7 +207,7 @@ def prune_tree(tree, nodes, validation_examples, old_accuracy):
 				n.fork()
 		if reduction != []:
 			max_red = reduction.index(max(reduction))
-			if isinstance(nodes[max_red], MiddleTreeNode):
+			if isinstance(nodes[max_red], MiddleNode):
 				nodes[max_red].toLeaf(nodes[max_red].mode)
 			nodes.pop(max_red)
 			reduction_cap = max(reduction)
@@ -270,24 +270,24 @@ def main():
 	default = mode(train_data.instances, -1)
 	learned_tree = makeDecisionTree(train_data.instances, train_data.attr_names, default, target_attribute, 0, numeric_attrs)
 	
-	print "Training file: " +str(train_file)
+	print "Training file: " +str(train_file) + "\n"
 	train_accuracy = getAccuracy(train_data.instances, learned_tree)
 	print "Accuracy: " + str(train_accuracy)
 
 	validation_accuracy = getAccuracy(validation_data.instances, learned_tree)
 	print "Validation Accuracy= " + str(validation_accuracy)
 	print "Pre-pruning:\n"
-	dnf = learned_tree.print_normal_form([])
+	dnf = learned_tree.print_dnf([])
 	nodes = learned_tree.list_nodes([])
-	print "Nodes:" + str(len(nodes))
+	print "Nodes:" + str(len(nodes)) + "\n"
 
 	prePruningTime = time.time() - now	
-	print "Pruned Runtime = " + str(prePruningTime) + "\n"
+	print "Pruned Runtime = " + str(prePruningTime)
 	if pruning == 1:
 		pruned_learned_tree = prune_tree(learned_tree, nodes, validation_data.instances, validation_accuracy)
 
 		print "Post-pruning:\n"
-		dnf_pruned = pruned_learned_tree[0].print_normal_form([])
+		dnf_pruned = pruned_learned_tree[0].print_dnf([])
 		nodes_pruned = pruned_learned_tree[0].list_nodes([])
 		print "Nodes:" + str(len(nodes_pruned))
 
