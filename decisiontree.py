@@ -101,7 +101,7 @@ class Data:
 		self.numeric_attrs = numeric_attrs
 		self.parse()
 		if not test:
-			self.fix_question()
+			self.replace_missing_values()
 
 	def parse(self):
 		with open(self.filename) as f:
@@ -125,7 +125,7 @@ class Data:
 						instance[a] = float(instance[a])
 
 
-	def fix_question(self):
+	def replace_missing_values(self):
 		groups = [0, 1]
 		fill_values = 2*[[None] * len(self.attr_names)]
 		for g in groups:
@@ -170,7 +170,7 @@ def entropy(data, attributes, target_attribute):
 
 ############################################################################
 
-def gain(data, attributes, attr, targetAttr, numeric_attrs):
+def calculateGain(data, attributes, attr, targetAttr, numeric_attrs):
 
 	currentEntropy = entropy(data, attributes, targetAttr)
 	subsetEntropy = 0.0
@@ -210,7 +210,7 @@ def selectAttr(data, attributes, target_attribute, numeric_attrs):
 	bestCut = None
 	maxGain = 0
 	for a in attributes[:-1]:
-		newGain, cut_at = gain(data, attributes, a, target_attribute, numeric_attrs) 
+		newGain, cut_at = calculateGain(data, attributes, a, target_attribute, numeric_attrs) 
 		if newGain>maxGain:
 			maxGain = newGain
 			best = attributes.index(a)
@@ -338,7 +338,7 @@ def prune_tree(tree, nodes, validation_examples, old_accuracy):
 		else:
 			reduction_cap = 0
 
-	print "New accuracy: " + str(new_accuracy) + "%"
+	print "Pruned Tree Accuracy: " + str(new_accuracy) + "%"
 	return [tree, new_accuracy]
 
 ############################################################################
@@ -405,7 +405,7 @@ def main():
 	print "Nodes:" + str(len(nodes))
 
 	prePruningTime = time.time() - now	
-	print "Pre-pruning Runtime = " + str(prePruningTime) + "\n"
+	print "Pruned Runtime = " + str(prePruningTime) + "\n"
 	if pruning == 1:
 		pruned_learned_tree = prune_tree(learned_tree, nodes, validation_data.instances, validation_accuracy)
 
@@ -421,13 +421,13 @@ def main():
 	totalTime = time.time() - now
 	print "\nDonezo:"
 	print "Runtime = " + str(totalTime)
-	print "Train accuracy: " + str(train_accuracy)
-	print "Validation pre-pruning accuracy: " + str(validation_accuracy)
-	print "Pre-pruning tree size: " + str(len(nodes))
+	print "Trained Accuracy: " + str(train_accuracy)
+	print "Validation Unpruned Accuracy: " + str(validation_accuracy)
+	print "Unpruned Tree Size: " + str(len(nodes))
 
 	if pruning == 1:
-		print "Validation post-pruning accuracy: " + str(pruned_learned_tree[1])
-		print "Post-pruning tree size: " + str(len(nodes_pruned))
+		print "Validation Pruned Accuracy: " + str(pruned_learned_tree[1])
+		print "Pruned Tree Size: " + str(len(nodes_pruned))
 
 if __name__ == "__main__":
 	main()
