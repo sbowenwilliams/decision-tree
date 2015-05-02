@@ -259,7 +259,8 @@ def main():
 					numeric_attrs.append(False)
 			except ValueError:
 				numeric_attrs.append(True)
-		numeric_attrs[7] = True
+		# numeric_attrs[7] = True
+		print numeric_attrs
 
 	train_data = Data(train_file, numeric_attrs)
 	validation_data = Data(validate_file, numeric_attrs)
