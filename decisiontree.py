@@ -141,41 +141,38 @@ class Data:
 
 ############################################################################
 
-def getFrequencies(examples, attributes, target):
+def getFrequencies(data, attributes, target):
 	frequencies = {}
-	#find target in data
-	a = attributes.index(target)
-	#calculate frequency of values in target attr
-	for row in examples:
-		if row[a] in frequencies:
-			frequencies[row[a]] += 1 
+	i = attributes.index(target)
+	for row in data:
+		if row[i] in frequencies:
+			frequencies[row[i]] += 1 
 		else:
-			frequencies[row[a]] = 1
+			frequencies[row[i]] = 1
 	return frequencies
 
 ############################################################################
 
-def entropy(examples, attributes, target):
+def entropy(data, attributes, target):
 
 	dataEntropy = 0.0
-	frequencies = getFrequencies(examples, attributes, target)
-	# Calculate the entropy of the data for the target attr
+	frequencies = getFrequencies(data, attributes, target)
 	for freq in frequencies.values():
-		dataEntropy += (-freq/len(examples)) * math.log(freq/len(examples), 2) 
+		dataEntropy += (-freq/len(data)) * math.log(freq/len(data), 2) 
 	return dataEntropy
 
 ############################################################################
 
-def gain(examples, attributes, attr, targetAttr):
+def gain(data, attributes, attr, targetAttr):
 	numeric_attrs = [True,True,False,True,True,True,True,True,True,True,False,True,True,False]
 
-	currentEntropy = entropy(examples, attributes, targetAttr)
+	currentEntropy = entropy(data, attributes, targetAttr)
 	subsetEntropy = 0.0
 	i = attributes.index(attr)
 	best = 0
 
 	if numeric_attrs[i]:
-		order = sorted(examples, key=operator.itemgetter(i))
+		order = sorted(data, key=operator.itemgetter(i))
 		subsetEntropy = currentEntropy
 		for j in range(len(order)):
 			if j==0 or j == (len(order)-1) or order[j][-1]==order[j+1][-1]:
@@ -192,22 +189,22 @@ def gain(examples, attributes, attr, targetAttr):
 				best = order[j][i]
 				subsetEntropy = currentSplitEntropy
 	else:
-		valFrequency = getFrequencies(examples, attributes, attr)
+		valFrequency = getFrequencies(data, attributes, attr)
 
 		for val, freq in valFrequency.iteritems():
 			valProbability =  freq / sum(valFrequency.values())
-			dataSubset     = [entry for entry in examples if entry[i] == val]
+			dataSubset     = [entry for entry in data if entry[i] == val]
 			subsetEntropy += valProbability * entropy(dataSubset, attributes, targetAttr)
 	
 	return [(currentEntropy - subsetEntropy),best]
 
 ############################################################################
-def selectAttr(examples, attributes, target):
+def selectAttr(data, attributes, target):
 	best = False
 	bestCut = None
 	maxGain = 0
 	for a in attributes[:-1]:
-		newGain, cut_at = gain(examples, attributes, a, target) 
+		newGain, cut_at = gain(data, attributes, a, target) 
 		if newGain>maxGain:
 			maxGain = newGain
 			best = attributes.index(a)
@@ -215,27 +212,27 @@ def selectAttr(examples, attributes, target):
 	return [best, bestCut]
 ############################################################################
 
-def one_class(examples):
-	first_class = examples[0][-1]
-	for e in examples:
+def one_class(data):
+	first_class = data[0][-1]
+	for e in data:
 		if e[-1]!=first_class:
 			return False
 	return True
 ############################################################################
 
-def mode(examples, index):  
-	L = [e[index] for e in examples]
+def mode(data, index):  
+	L = [e[index] for e in data]
 	return Counter(L).most_common()[0][0]
 
 ############################################################################
-def splitTree(examples, attr, splitval, numeric_attrs):
+def splitTree(data, attr, splitval, numeric_attrs):
 	isNum = numeric_attrs[attr]
 	positive_count = 0
 
 	if isNum:
 		subsets = {'<=': [], 
 					'>': []}
-		for row in examples:
+		for row in data:
 			if row[-1]=='1':
 				positive_count += 1
 			if row[attr]<=splitval:
@@ -244,14 +241,14 @@ def splitTree(examples, attr, splitval, numeric_attrs):
 				subsets['>'].append(row)
 	else:
 		subsets = {}
-		for row in examples:
+		for row in data:
 			if row[-1]=='1':
 				positive_count += 1
 			if row[attr] in subsets:
 				subsets[row[attr]].append(row)
 			else:
 				subsets[row[attr]] = [row]
-	negative_count = len(examples)-positive_count
+	negative_count = len(data)-positive_count
 	if positive_count > negative_count:
 		majority = '1'
 	else:
@@ -262,22 +259,22 @@ def splitTree(examples, attr, splitval, numeric_attrs):
 
 ############################################################################
 
-def learn_decision_tree(examples, attributes, default, target, iteration, numeric_attrs):
+def learn_decision_tree(data, attributes, default, target, iteration, numeric_attrs):
 	iteration += 1
 
 	if iteration > 10:
 		return TreeLeaf(default)
-	if not examples:
+	if not data:
 		tree = TreeLeaf(default)
-	elif one_class(examples):
-		tree = TreeLeaf(examples[0][-1])
+	elif one_class(data):
+		tree = TreeLeaf(data[0][-1])
 	else:
-		best_attr = selectAttr(examples, attributes, target)
+		best_attr = selectAttr(data, attributes, target)
 		if best_attr is False:
 			tree = TreeLeaf(default)
 
 		else:
-			split_examples = splitTree(examples, best_attr[0], best_attr[1], numeric_attrs) #new decision tree with root test *best_attr*
+			split_examples = splitTree(data, best_attr[0], best_attr[1], numeric_attrs) #new decision tree with root test *best_attr*
 			best_attr.append(split_examples['numeric'])
 			best_attr.append(attributes[best_attr[0]])
 			best_attr.append(split_examples["mode"])
@@ -291,22 +288,22 @@ def learn_decision_tree(examples, attributes, default, target, iteration, numeri
 	return tree
 
 ############################################################################
-def tree_accuracy(examples, dt):
+def tree_accuracy(data, dt):
 	count = 0
 	correct_predictions = 0
-	for row in examples:
+	for row in data:
 		count += 1
 		pred_val = dt.predict(row)
 		if row[-1]==pred_val:
 			correct_predictions+=1
-	accuracy = 100*correct_predictions/len(examples)
+	accuracy = 100*correct_predictions/len(data)
 	return accuracy
 
 ###########################################################################
-def test_tree(examples, dt):
-	for row in examples:
+def test_tree(data, dt):
+	for row in data:
 		row[-1] = dt.predict(row)
-	return examples
+	return data
 ############################################################################
 def prune_tree(tree, nodes, validation_examples, old_acc):
 	percent_to_try = 0.2
