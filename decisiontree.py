@@ -1,3 +1,8 @@
+# Sean Bowen-Williams
+# Asher Rieck
+# Brian Tang
+# EECS 349 Spring 2015
+
 from __future__ import division
 import random
 import copy
@@ -64,7 +69,7 @@ class TreeLeaf(TreeNode):
 	def __repr__(self):
 		return "This is a TreeLeaf with result: {0}".format(self.result)
 
-	def toFork(self):
+	def fork(self):
 		self.__class__ = TreeFork
 		self.result = None
 ############################################################################
@@ -163,8 +168,7 @@ def entropy(data, attributes, target):
 
 ############################################################################
 
-def gain(data, attributes, attr, targetAttr):
-	numeric_attrs = [True,True,False,True,True,True,True,True,True,True,False,True,True,False]
+def gain(data, attributes, attr, targetAttr, numeric_attrs):
 
 	currentEntropy = entropy(data, attributes, targetAttr)
 	subsetEntropy = 0.0
@@ -199,12 +203,12 @@ def gain(data, attributes, attr, targetAttr):
 	return [(currentEntropy - subsetEntropy),best]
 
 ############################################################################
-def selectAttr(data, attributes, target):
+def selectAttr(data, attributes, target, numeric_attrs):
 	best = False
 	bestCut = None
 	maxGain = 0
 	for a in attributes[:-1]:
-		newGain, cut_at = gain(data, attributes, a, target) 
+		newGain, cut_at = gain(data, attributes, a, target, numeric_attrs) 
 		if newGain>maxGain:
 			maxGain = newGain
 			best = attributes.index(a)
@@ -269,7 +273,7 @@ def learn_decision_tree(data, attributes, default, target, iteration, numeric_at
 	elif one_class(data):
 		tree = TreeLeaf(data[0][-1])
 	else:
-		best_attr = selectAttr(data, attributes, target)
+		best_attr = selectAttr(data, attributes, target, numeric_attrs)
 		if best_attr is False:
 			tree = TreeLeaf(default)
 
@@ -321,7 +325,7 @@ def prune_tree(tree, nodes, validation_examples, old_acc):
 				new_acc = tree_accuracy(validation_examples, tree)
 				diff = new_acc - old_acc
 				reduction.append(diff)
-				n.toFork()
+				n.fork()
 		if reduction != []:
 			max_red_at = reduction.index(max(reduction))
 			if isinstance(nodes[max_red_at], TreeFork):
@@ -345,7 +349,7 @@ def main():
 	pruning = 1
 
 	if len(sys.argv) > 1:	
-		filename = sys.argv[1]
+		train_filename = sys.argv[1]
 
 	if len(sys.argv) > 2:
 		validate_filename = sys.argv[2]
@@ -357,7 +361,7 @@ def main():
 		target = sys.argv[4]
 
 	if len(sys.argv) > 5:
-		pruning = sys.argv[5]
+		pruning = int(sys.argv[5])
 
 	numeric_attrs = []
 	
