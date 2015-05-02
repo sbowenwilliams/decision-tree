@@ -3,12 +3,14 @@
 # Brian Tang
 # EECS 349 Spring 2015
 
+from __future__ import division
+
 import sys
 import math
 import random
 import copy
 import operator
-from __future__ import division
+
 import time
 
 from collections import Counter
@@ -63,8 +65,8 @@ class TreeNode():
 ############################################################################
 
 class TreeLeaf(TreeNode):
-	def __init__(self, target_class):
-		self.result = target_class
+	def __init__(self, target_attribute):
+		self.result = target_attribute
 
 	def __repr__(self):
 		return "This is a TreeLeaf with result: {0}".format(self.result)
@@ -292,7 +294,7 @@ def makeDecisionTree(data, attributes, default, target_attribute, iteration, num
 	return tree
 
 ############################################################################
-def tree_accuracy(data, dt):
+def getAccuracy(data, dt):
 	count = 0
 	correct_predictions = 0
 	for row in data:
@@ -320,11 +322,11 @@ def prune_tree(tree, nodes, validation_examples, old_accuracy):
 				nodes.pop(nodes.index(n))
 				continue
 			else:
-				target_class = n.mode
-				n.toLeaf(target_class)
-				new_accuracy = tree_accuracy(validation_examples, tree)
-				diff = new_accuracy - old_accuracy
-				reduction.append(diff)
+				target_attribute = n.mode
+				n.toLeaf(target_attribute)
+				new_accuracy = getAccuracy(validation_examples, tree)
+				difference = new_accuracy - old_accuracy
+				reduction.append(difference)
 				n.fork()
 		if reduction != []:
 			max_red_at = reduction.index(max(reduction))
@@ -332,7 +334,7 @@ def prune_tree(tree, nodes, validation_examples, old_accuracy):
 				nodes[max_red_at].toLeaf(nodes[max_red_at].mode)
 			nodes.pop(max_red_at)
 			reduction_cap = max(reduction)
-			old_accuracy = tree_accuracy(validation_examples, tree)
+			old_accuracy = getAccuracy(validation_examples, tree)
 		else:
 			reduction_cap = 0
 
@@ -392,10 +394,10 @@ def main():
 	learned_tree = makeDecisionTree(train_data.instances, train_data.attr_names, default, target_attribute, 0, numeric_attrs)
 	
 	print "Training file: " +str(train_file)
-	train_accuracy = tree_accuracy(train_data.instances, learned_tree)
+	train_accuracy = getAccuracy(train_data.instances, learned_tree)
 	print "Accuracy: " + str(train_accuracy)
 
-	validation_accuracy = tree_accuracy(validation_data.instances, learned_tree)
+	validation_accuracy = getAccuracy(validation_data.instances, learned_tree)
 	print "Validation Accuracy= " + str(validation_accuracy)
 	print "Pre-pruning:\n"
 	dnf = learned_tree.print_normal_form([])
