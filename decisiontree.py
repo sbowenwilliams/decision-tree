@@ -309,11 +309,11 @@ def test_tree(data, dt):
 		row[-1] = dt.predict(row)
 	return data
 ############################################################################
-def prune_tree(tree, nodes, validation_examples, old_accuracy):
-	percentage = 0.2
-	nodes = random.sample(nodes, int(percentage*(len(nodes))))
-	reduction_cap = 1000
-	while reduction_cap >0:
+def prune_tree(tree, nodes, validation_examples, old_acc):
+	percent_to_try = 0.2
+	nodes = random.sample(nodes, int(percent_to_try*(len(nodes))))
+	reduced_by = 1000
+	while reduced_by >0:
 		reduction = []
 		for n in nodes:
 			if isinstance(n, TreeLeaf):
@@ -322,8 +322,8 @@ def prune_tree(tree, nodes, validation_examples, old_accuracy):
 			else:
 				target_class = n.mode
 				n.toLeaf(target_class)
-				new_accuracy = tree_accuracy(validation_examples, tree)
-				diff = new_accuracy - old_accuracy
+				new_acc = tree_accuracy(validation_examples, tree)
+				diff = new_acc - old_acc
 				reduction.append(diff)
 				n.fork()
 		if reduction != []:
@@ -331,13 +331,13 @@ def prune_tree(tree, nodes, validation_examples, old_accuracy):
 			if isinstance(nodes[max_red_at], MiddleTreeNode):
 				nodes[max_red_at].toLeaf(nodes[max_red_at].mode)
 			nodes.pop(max_red_at)
-			reduction_cap = max(reduction)
-			old_accuracy = tree_accuracy(validation_examples, tree)
+			reduced_by = max(reduction)
+			old_acc = tree_accuracy(validation_examples, tree)
 		else:
-			reduction_cap = 0
+			reduced_by = 0
 
-	print "New accuracy: " + str(new_accuracy) + "%"
-	return [tree, new_accuracy]
+	print "The new accuracy is: " + str(new_acc) + "%"
+	return [tree, new_acc]
 
 ############################################################################
 def main():
