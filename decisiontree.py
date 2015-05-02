@@ -83,9 +83,9 @@ class MiddleTreeNode(TreeNode):
 		self.mode = attr_arr[4]
 		self.branches = {}
 
-	def toLeaf(self, target):
+	def toLeaf(self, target_attribute):
 		self.__class__ = TreeLeaf
-		self.result = target
+		self.result = target_attribute
 
 	def add_branch(self, val, subtree, default):
 		self.branches[val] = subtree
@@ -146,23 +146,23 @@ class Data:
 
 ############################################################################
 
-def getFrequencies(data, attributes, target):
-	frequencies = {}
-	i = attributes.index(target)
+def getOccurences(data, attributes, target_attribute):
+	occurences = {}
+	i = attributes.index(target_attribute)
 	for row in data:
-		if row[i] in frequencies:
-			frequencies[row[i]] += 1 
+		if row[i] in occurences:
+			occurences[row[i]] += 1 
 		else:
-			frequencies[row[i]] = 1
-	return frequencies
+			occurences[row[i]] = 1
+	return occurences
 
 ############################################################################
 
-def entropy(data, attributes, target):
+def entropy(data, attributes, target_attribute):
 
 	dataEntropy = 0.0
-	frequencies = getFrequencies(data, attributes, target)
-	for freq in frequencies.values():
+	occurences = getOccurences(data, attributes, target_attribute)
+	for freq in occurences.values():
 		dataEntropy += (-freq/len(data)) * math.log(freq/len(data), 2) 
 	return dataEntropy
 
@@ -193,7 +193,7 @@ def gain(data, attributes, attr, targetAttr, numeric_attrs):
 				best = order[j][i]
 				subsetEntropy = currentSplitEntropy
 	else:
-		valFrequency = getFrequencies(data, attributes, attr)
+		valFrequency = getOccurences(data, attributes, attr)
 
 		for val, freq in valFrequency.iteritems():
 			valProbability =  freq / sum(valFrequency.values())
@@ -203,12 +203,12 @@ def gain(data, attributes, attr, targetAttr, numeric_attrs):
 	return [(currentEntropy - subsetEntropy),best]
 
 ############################################################################
-def selectAttr(data, attributes, target, numeric_attrs):
+def selectAttr(data, attributes, target_attribute, numeric_attrs):
 	best = False
 	bestCut = None
 	maxGain = 0
 	for a in attributes[:-1]:
-		newGain, cut_at = gain(data, attributes, a, target, numeric_attrs) 
+		newGain, cut_at = gain(data, attributes, a, target_attribute, numeric_attrs) 
 		if newGain>maxGain:
 			maxGain = newGain
 			best = attributes.index(a)
@@ -229,7 +229,7 @@ def mode(data, index):
 	return Counter(L).most_common()[0][0]
 
 ############################################################################
-def splitTree(data, attr, splitval, numeric_attrs):
+def makeSplit(data, attr, splitval, numeric_attrs):
 	isNum = numeric_attrs[attr]
 	positive_count = 0
 
@@ -263,7 +263,7 @@ def splitTree(data, attr, splitval, numeric_attrs):
 
 ############################################################################
 
-def learn_decision_tree(data, attributes, default, target, iteration, numeric_attrs):
+def makeDecisionTree(data, attributes, default, target_attribute, iteration, numeric_attrs):
 	iteration += 1
 
 	if iteration > 10:
@@ -273,12 +273,12 @@ def learn_decision_tree(data, attributes, default, target, iteration, numeric_at
 	elif one_class(data):
 		tree = TreeLeaf(data[0][-1])
 	else:
-		best_attr = selectAttr(data, attributes, target, numeric_attrs)
+		best_attr = selectAttr(data, attributes, target_attribute, numeric_attrs)
 		if best_attr is False:
 			tree = TreeLeaf(default)
 
 		else:
-			split_examples = splitTree(data, best_attr[0], best_attr[1], numeric_attrs) #new decision tree with root test *best_attr*
+			split_examples = makeSplit(data, best_attr[0], best_attr[1], numeric_attrs) #new decision tree with root test *best_attr*
 			best_attr.append(split_examples['numeric'])
 			best_attr.append(attributes[best_attr[0]])
 			best_attr.append(split_examples["mode"])
@@ -287,7 +287,7 @@ def learn_decision_tree(data, attributes, default, target, iteration, numeric_at
 				if not branch_examples:
 					break
 				sub_default = mode(branch_examples, -1)
-				subtree = learn_decision_tree(branch_examples, attributes, sub_default, target, iteration, numeric_attrs)
+				subtree = makeDecisionTree(branch_examples, attributes, sub_default, target_attribute, iteration, numeric_attrs)
 				tree.add_branch(branch_lab, subtree, sub_default)
 	return tree
 
@@ -342,30 +342,31 @@ def prune_tree(tree, nodes, validation_examples, old_acc):
 ############################################################################
 def main():
 	now = time.time()
-	train_filename = 'btrainsmall.csv'
-	validate_filename = 'bvalidate.csv'
-	test_filename = 'btest.csv'
-	target = "winner"
+	
+	train_file = 'btrainsmall.csv'
+	validate_file = 'bvalidate.csv'
+	test_file = 'btest.csv'
+	target_attribute = "winner"
 	pruning = 1
 
 	if len(sys.argv) > 1:	
-		train_filename = sys.argv[1]
+		train_file = sys.argv[1]
 
 	if len(sys.argv) > 2:
-		validate_filename = sys.argv[2]
+		validate_file = sys.argv[2]
 
 	if len(sys.argv) > 3:
-		test_filename = sys.argv[3]
+		test_file = sys.argv[3]
 
 	if len(sys.argv) > 4:
-		target = sys.argv[4]
+		target_attribute = sys.argv[4]
 
 	if len(sys.argv) > 5:
 		pruning = int(sys.argv[5])
 
 	numeric_attrs = []
 	
-	with open(train_filename) as f:
+	with open(train_file) as f:
 		original = f.read()
 
 		instances = [line.split(',') for line in original.split("\n")]
@@ -381,16 +382,16 @@ def main():
 				numeric_attrs.append(True)
 		numeric_attrs[7] = True
 
-	train_data = Data(train_filename, numeric_attrs)
-	validation_data = Data(validate_filename, numeric_attrs)
-	test_data = Data(test_filename, numeric_attrs,  True)
+	train_data = Data(train_file, numeric_attrs)
+	validation_data = Data(validate_file, numeric_attrs)
+	test_data = Data(test_file, numeric_attrs,  True)
 
 	
 	#build tree
 	default = mode(train_data.instances, -1)
-	learned_tree = learn_decision_tree(train_data.instances, train_data.attr_names, default, target, 0, numeric_attrs)
+	learned_tree = makeDecisionTree(train_data.instances, train_data.attr_names, default, target_attribute, 0, numeric_attrs)
 	
-	print "Training file: " +str(train_filename)
+	print "Training file: " +str(train_file)
 	train_accuracy = tree_accuracy(train_data.instances, learned_tree)
 	print "Accuracy: " + str(train_accuracy)
 
