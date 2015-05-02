@@ -206,16 +206,19 @@ def calculateGain(data, attributes, attr, targetAttr, numeric_attrs):
 
 ############################################################################
 def selectAttr(data, attributes, target_attribute, numeric_attrs):
-	best = False
+	bestAttr = False
 	bestCut = None
-	maxGain = 0
+	
+	#Edit this to change learning rate
+	maxInfoGain = 0
+	
 	for a in attributes[:-1]:
 		newGain, cut_at = calculateGain(data, attributes, a, target_attribute, numeric_attrs) 
-		if newGain>maxGain:
-			maxGain = newGain
-			best = attributes.index(a)
+		if newGain>maxInfoGain:
+			maxInfoGain = newGain
+			bestAttr = attributes.index(a)
 			bestCut = cut_at
-	return [best, bestCut]
+	return [bestAttr, bestCut]
 ############################################################################
 
 def one_class(data):
@@ -324,22 +327,22 @@ def prune_tree(tree, nodes, validation_examples, old_accuracy):
 			else:
 				target_attribute = n.mode
 				n.toLeaf(target_attribute)
-				new_accuracy = getAccuracy(validation_examples, tree)
-				difference = new_accuracy - old_accuracy
+				accuracy_update = getAccuracy(validation_examples, tree)
+				difference = accuracy_update - old_accuracy
 				reduction.append(difference)
 				n.fork()
 		if reduction != []:
-			max_red_at = reduction.index(max(reduction))
-			if isinstance(nodes[max_red_at], MiddleTreeNode):
-				nodes[max_red_at].toLeaf(nodes[max_red_at].mode)
-			nodes.pop(max_red_at)
+			max_red = reduction.index(max(reduction))
+			if isinstance(nodes[max_red], MiddleTreeNode):
+				nodes[max_red].toLeaf(nodes[max_red].mode)
+			nodes.pop(max_red)
 			reduction_cap = max(reduction)
 			old_accuracy = getAccuracy(validation_examples, tree)
 		else:
 			reduction_cap = 0
 
-	print "Pruned Tree Accuracy: " + str(new_accuracy) + "%"
-	return [tree, new_accuracy]
+	print "Pruned Tree Accuracy: " + str(accuracy_update) + "%"
+	return [tree, accuracy_update]
 
 ############################################################################
 def main():
