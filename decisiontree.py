@@ -11,140 +11,14 @@ import random
 import copy
 import operator
 
+from tree import TreeNode, TreeLeaf, MiddleTreeNode
+from data import Data
+
 import time
 
 from collections import Counter
 
-############################################################################
-class TreeNode():
-	def predict(self, e):
-		if isinstance(self, TreeLeaf):
-			return self.result
-		else:
-			if self.numeric:
-				if e[self.attr] <= self.splitval and '<=' in self.branches:
-					return self.branches['<='].predict(e)
-				elif '>' in self.branches:
-					return self.branches['>'].predict(e)
-				else:
-					return '0'
-			else:
-				try:    
-					out = self.branches[e[self.attr]].predict(e)
-				except:
-					return '0'
-				return out
 
-	def print_normal_form(self, path):
-		if isinstance(self, TreeLeaf):
-			if self.result == '1':
-				print "("+ str(path) + ") OR"
-				return path
-			else:
-				return False
-
-		else:
-			for branch_name, branch in self.branches.iteritems():
-				if self.numeric:
-					list_name = self.attr_name + " " + branch_name + " "+ str(self.splitval)
-				else: 
-					list_name = self.attr_name + " is " + branch_name
-				new_path = path + [list_name]
-				branch.print_normal_form(new_path)
-		return path
-
-	def list_nodes(self, nodes):
-		if isinstance(self, TreeLeaf):
-			nodes.append(self)
-			return nodes
-		nodes.append(self)
-		for branch_name, branch in self.branches.iteritems():
-			nodes = branch.list_nodes(nodes)
-		return nodes
-
-############################################################################
-
-class TreeLeaf(TreeNode):
-	def __init__(self, target_attribute):
-		self.result = target_attribute
-
-	def __repr__(self):
-		return "This is a TreeLeaf with result: {0}".format(self.result)
-
-	def fork(self):
-		self.__class__ = MiddleTreeNode
-		self.result = None
-############################################################################
-
-class MiddleTreeNode(TreeNode):
-	def __init__(self, attr_arr):
-		self.attr =  attr_arr[0]
-		self.splitval =  attr_arr[1]
-		self.numeric = attr_arr[2]
-		self.attr_name = attr_arr[3]
-		self.mode = attr_arr[4]
-		self.branches = {}
-
-	def toLeaf(self, target_attribute):
-		self.__class__ = TreeLeaf
-		self.result = target_attribute
-
-	def add_branch(self, val, subtree, default):
-		self.branches[val] = subtree
-
-	def __repr__(self):
-		return "\nThis node is a fork on {0}, with {1} branches.\nMost instances in it are {2}.".format(self.attr_name,len(self.branches),self.mode)
-############################################################################
-class Data:
-	def __init__(self, filename, numeric_attrs, test=False):
-		self.filename = filename
-		self.numeric_attrs = numeric_attrs
-		self.parse()
-		if not test:
-			self.replace_missing_values()
-
-	def parse(self):
-		with open(self.filename) as f:
-			original = f.read()
-
-			self.instances = [line.split(',') for line in original.split("\n")]
-
-			if self.instances[-1]==['']:
-				del self.instances[-1]
-
-			self.attr_names = self.instances.pop(0)
-			for header in self.attr_names:
-				self.attr_names[self.attr_names.index(header)] = header.strip(' ')
-
-
-			for instance in self.instances:
-				for a in range(len(self.numeric_attrs)):
-					if instance[a] == '?':
-						continue
-					if self.numeric_attrs[a]:
-						instance[a] = float(instance[a])
-
-
-	def replace_missing_values(self):
-		groups = [0, 1]
-		fill_values = 2*[[None] * len(self.attr_names)]
-		for g in groups:
-			group_instances = [e for e in self.instances if e[-1] == str(groups[g])]
-			for attr in range(len(self.attr_names[:-1])):
-				if self.numeric_attrs[attr]:
-					not_missing = [e[attr] for e in group_instances if e[attr] != '?']      
-					fill_values[g][attr] = int(sum(not_missing) / len(not_missing))
-				else:
-					nominal_vals = [e[attr] for e in group_instances]
-					fill_values[g][attr] = Counter(nominal_vals).most_common()[0][0]
-
-		for instance in self.instances:
-			for attr in range(len(self.attr_names)):
-				if instance[attr]=='?' and instance[-1]=='0':
-					instance[attr] = fill_values[0][attr]
-				elif instance[attr]=='?' and instance[-1]=='1':
-					instance[attr] = fill_values[1][attr]
-		return True
 
 ############################################################################
 
