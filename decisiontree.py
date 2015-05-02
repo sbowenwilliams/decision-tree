@@ -222,7 +222,7 @@ def prune_tree(tree, nodes, validation_examples, old_accuracy):
 def main():
 	now = time.time()
 	
-	train_file = 'btrainsmall.csv'
+	train_file = '5k.csv'
 	validate_file = 'bvalidate.csv'
 	test_file = 'btest.csv'
 	target_attribute = "winner"
