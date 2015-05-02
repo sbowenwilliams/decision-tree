@@ -33,7 +33,7 @@ class TreeNode():
 					return '0'
 				return out
 
-	def disjunctive_nf(self, path):
+	def print_normal_form(self, path):
 		if isinstance(self, TreeLeaf):
 			if self.result == '1':
 				print "("+ str(path) + ") OR"
@@ -42,13 +42,13 @@ class TreeNode():
 				return False
 
 		else:
-			for branch_label, branch in self.branches.iteritems():
+			for branch_name, branch in self.branches.iteritems():
 				if self.numeric:
-					clause = self.attr_name + " " + branch_label + " "+ str(self.splitval)
+					list_name = self.attr_name + " " + branch_name + " "+ str(self.splitval)
 				else: 
-					clause = self.attr_name + " is " + branch_label
-				new_path = path + [clause]
-				branch.disjunctive_nf(new_path)
+					list_name = self.attr_name + " is " + branch_name
+				new_path = path + [list_name]
+				branch.print_normal_form(new_path)
 		return path
 
 	def list_nodes(self, nodes):
@@ -56,7 +56,7 @@ class TreeNode():
 			nodes.append(self)
 			return nodes
 		nodes.append(self)
-		for branch_label, branch in self.branches.iteritems():
+		for branch_name, branch in self.branches.iteritems():
 			nodes = branch.list_nodes(nodes)
 		return nodes
 
@@ -397,7 +397,7 @@ def main():
 	validation_accuracy = tree_accuracy(validation_data.instances, learned_tree)
 	print "Validation Accuracy= " + str(validation_accuracy)
 	print "Pre-pruning:\n"
-	dnf = learned_tree.disjunctive_nf([])
+	dnf = learned_tree.print_normal_form([])
 	nodes = learned_tree.list_nodes([])
 	print "Nodes:" + str(len(nodes))
 
@@ -407,7 +407,7 @@ def main():
 		pruned_learned_tree = prune_tree(learned_tree, nodes, validation_data.instances, validation_accuracy)
 
 		print "Post-pruning:\n"
-		dnf_pruned = pruned_learned_tree[0].disjunctive_nf([])
+		dnf_pruned = pruned_learned_tree[0].print_normal_form([])
 		nodes_pruned = pruned_learned_tree[0].list_nodes([])
 		print "Nodes:" + str(len(nodes_pruned))
 
