@@ -3,12 +3,12 @@
 # Brian Tang
 # EECS 349 Spring 2015
 
-from __future__ import division
-import random
-import copy
 import sys
 import math
+import random
+import copy
 import operator
+from __future__ import division
 import time
 
 from collections import Counter
@@ -70,11 +70,11 @@ class TreeLeaf(TreeNode):
 		return "This is a TreeLeaf with result: {0}".format(self.result)
 
 	def fork(self):
-		self.__class__ = TreeFork
+		self.__class__ = MiddleTreeNode
 		self.result = None
 ############################################################################
 
-class TreeFork(TreeNode):
+class MiddleTreeNode(TreeNode):
 	def __init__(self, attr_arr):
 		self.attr =  attr_arr[0]
 		self.splitval =  attr_arr[1]
@@ -122,7 +122,7 @@ class Data:
 					if self.numeric_attrs[a]:
 						instance[a] = float(instance[a])
 
-####### FIX THIS SHIT
+
 	def fix_question(self):
 		groups = [0, 1]
 		fill_values = 2*[[None] * len(self.attr_names)]
@@ -282,7 +282,7 @@ def learn_decision_tree(data, attributes, default, target, iteration, numeric_at
 			best_attr.append(split_examples['numeric'])
 			best_attr.append(attributes[best_attr[0]])
 			best_attr.append(split_examples["mode"])
-			tree = TreeFork(best_attr)
+			tree = MiddleTreeNode(best_attr)
 			for branch_lab, branch_examples in split_examples['branches'].iteritems():
 				if not branch_examples:
 					break
@@ -328,7 +328,7 @@ def prune_tree(tree, nodes, validation_examples, old_acc):
 				n.fork()
 		if reduction != []:
 			max_red_at = reduction.index(max(reduction))
-			if isinstance(nodes[max_red_at], TreeFork):
+			if isinstance(nodes[max_red_at], MiddleTreeNode):
 				nodes[max_red_at].toLeaf(nodes[max_red_at].mode)
 			nodes.pop(max_red_at)
 			reduced_by = max(reduction)
