@@ -64,4 +64,3 @@ def entropy(attributes, data, targetattribute):
 header, data = get_training()
 print entropy(header, data, 'weather')
 
-
